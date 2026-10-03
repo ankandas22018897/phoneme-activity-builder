@@ -8,46 +8,60 @@ datasource db {
 }
 
 model WordList {
-  id          Int                  @id @default(autoincrement())
+  id          Int                     @id @default(autoincrement())
   name        String
   description String?
   words       Word[]
   activities  ActivityConfiguration[]
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
 
   @@index([name])
 }
 
 model Word {
-  id         Int      @id @default(autoincrement())
-  wordListId Int
-  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
-  english    String
-  phonemes   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int           @id @default(autoincrement())
+  wordListId   Int
+  wordList     WordList      @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+  english      String
+  phonemes     String        // Kept for backward compatibility
+  phonemeItems PhonemeItem[] // Structured ordered phoneme records addressing Assessment 2 feedback
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@index([wordListId])
   @@index([english])
 }
 
+model PhonemeItem {
+  id        Int      @id @default(autoincrement())
+  wordId    Int
+  word      Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  symbol    String   // e.g. "sh", "ee", "p"
+  position  Int      // 0, 1, 2...
+  createdAt DateTime @default(now())
+
+  @@index([wordId])
+  @@index([symbol])
+}
+
 model ActivityConfiguration {
-  id            Int      @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   name          String
   activityType  ActivityType
   wordListId    Int
-  wordList      WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
-  difficulty    String   @default("medium")
-  maxGuesses    Int      @default(6)
-  hintsEnabled  Boolean  @default(true)
+  wordList      WordList        @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+  difficulty    String          @default("medium")
+  maxGuesses    Int             @default(6)
+  hintsEnabled  Boolean         @default(true)
   rows          Int?
   cols          Int?
-  showAnswers   Boolean  @default(false)
+  showAnswers   Boolean         @default(false)
   outputTitle   String?
   metadata      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  generations   GenerationLog[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([activityType])
   @@index([wordListId])
@@ -57,3 +71,32 @@ enum ActivityType {
   WORDLE
   WORD_SEARCH
 }
+
+model GenerationLog {
+  id           Int                    @id @default(autoincrement())
+  activityType ActivityType
+  activityId   Int?
+  activity     ActivityConfiguration? @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  status       String                 // "SUCCESS" or "FAILED"
+  durationMs   Int                    // Execution time in ms
+  errorMessage String?                // Empty wordlist, grid size small, etc.
+  wordCount    Int?
+  timestamp    DateTime               @default(now())
+
+  @@index([activityType])
+  @@index([status])
+  @@index([timestamp])
+}
+
+model TelemetrySession {
+  id              Int      @id @default(autoincrement())
+  sessionId       String
+  pagePath        String   // "/builder", "/wordle", "/word-search", "/dashboard"
+  durationSeconds Float    // Time spent on page
+  deviceType      String   // "desktop", "mobile", "tablet"
+  timestamp       DateTime @default(now())
+
+  @@index([pagePath])
+  @@index([timestamp])
+}
+
