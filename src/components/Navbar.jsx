@@ -8,12 +8,14 @@ import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Home" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/wordle", label: "Wordle" },
   { href: "/word-search", label: "Word Search" },
   { href: "/activities", label: "Saved Data" },
   { href: "/about", label: "About" },
   { href: "/settings", label: "Settings" },
 ];
+
 
 export default function Navbar() {
   const pathname = usePathname();

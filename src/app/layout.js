@@ -2,6 +2,7 @@ import { Source_Sans_3 } from "next/font/google";
 import { cookies } from "next/headers";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import TelemetryTracker from "@/components/TelemetryTracker";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PROJECT_TITLE } from "@/data/student";
 import {
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }) {
     >
       <body className="flex min-h-full flex-col font-sans">
         <ThemeProvider initialTheme={theme} initialDensity={density}>
+          <TelemetryTracker />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
