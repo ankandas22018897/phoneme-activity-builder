@@ -9,14 +9,16 @@ import { WORDLE_WORDS, findWordByPhonemes } from "@/data/phonemeWords";
 import { downloadWordleActivity } from "@/lib/htmlGenerator";
 import { validateWordlePack } from "@/lib/wordleLogic";
 
-function pickRandomPack(count = 5, phonemeCount = 3) {
+function pickRandomPack(count = 5, phonemeCount = 3, randomize = true) {
   const pool = WORDLE_WORDS.filter((w) => w.phonemeCount === phonemeCount);
-  const shuffled = [...pool];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  const selected = randomize ? [...pool] : pool;
+  if (randomize) {
+    for (let i = selected.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [selected[i], selected[j]] = [selected[j], selected[i]];
+    }
   }
-  return shuffled.slice(0, Math.min(count, shuffled.length)).map((w) => ({
+  return selected.slice(0, Math.min(count, selected.length)).map((w) => ({
     phonemes: [...w.phonemes],
     english: w.word,
   }));
@@ -35,7 +37,7 @@ function draftFromEntry(entry) {
 export default function WordleBuilder() {
   /** Size N = N words in pack AND N phoneme boxes per word (3, 4, or 5). */
   const [size, setSize] = useState(3);
-  const [targets, setTargets] = useState(() => pickRandomPack(3, 3));
+  const [targets, setTargets] = useState(() => pickRandomPack(3, 3, false));
   const [draft, setDraft] = useState(() => {
     const d = WORDLE_WORDS.find((w) => w.word === "ship") || WORDLE_WORDS[0];
     return { phonemes: [...d.phonemes], english: d.word };
