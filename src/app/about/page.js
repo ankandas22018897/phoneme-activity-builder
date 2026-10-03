@@ -152,12 +152,7 @@ export default function AboutPage() {
           In accordance with La Trobe University Assessment 3 instructions, the verbal walkthrough video is submitted directly via the Moodle Turnitin portal alongside the official technical documentation report (<code className="text-[11px]">Assessment3_Submission_Report.docx</code>).
         </p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
-            <div className="text-[11px] font-semibold text-[var(--text-muted)]">Target Duration</div>
-            <div className="mt-1 text-sm font-bold text-[var(--text)]">~6 min 45 sec</div>
-            <div className="text-[10px] text-[var(--text-muted)]">Strictly within 3 to 8 min brief</div>
-          </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
             <div className="text-[11px] font-semibold text-[var(--text-muted)]">Identity Verification</div>
             <div className="mt-1 text-sm font-bold text-[var(--text)]">Face, Voice &amp; Student ID</div>
