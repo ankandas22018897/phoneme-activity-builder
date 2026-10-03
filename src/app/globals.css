@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root,
+html[data-theme="light"] {
+  --background: #eef3f8;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --border: #cbd5e1;
+  --primary: #1d4f7c;
+  --primary-hover: #163d5f;
+  --primary-soft: #e8f1f8;
+  --accent: #0f766e;
+  --focus: #2563eb;
+  --correct: #15803d;
+  --correct-bg: #dcfce7;
+  --present: #a16207;
+  --present-bg: #fef3c7;
+  --absent: #64748b;
+  --absent-bg: #e2e8f0;
+}
+
+html[data-theme="dark"],
+html.dark {
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-muted: #334155;
+  --text: #f8fafc;
+  --text-muted: #cbd5e1;
+  --border: #475569;
+  --primary: #93c5fd;
+  --primary-hover: #bfdbfe;
+  --primary-soft: #1e3a5f;
+  --accent: #2dd4bf;
+  --focus: #93c5fd;
+  --correct: #4ade80;
+  --correct-bg: #14532d;
+  --present: #fbbf24;
+  --present-bg: #78350f;
+  --absent: #94a3b8;
+  --absent-bg: #334155;
+}
+
+html[data-density="compact"] {
+  --space-page: 1rem;
+}
+
+html[data-density="comfortable"] {
+  --space-page: 1.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-source-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-source-sans), "Segoe UI", system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Keep header chrome readable in light and dark app themes */
+header a:not([aria-current="page"]) {
+  color: inherit;
+}
+
+header a[aria-current="page"] {
+  color: #1d4f7c;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: var(--space-page, 1.5rem) 1rem;
+}
+
+@media (min-width: 640px) {
+  .page-shell {
+    padding-inline: 1.5rem;
+  }
+}
