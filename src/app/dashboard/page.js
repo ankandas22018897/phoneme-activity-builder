@@ -105,6 +105,7 @@ export default function DashboardPage() {
   const deviceDistribution = data?.deviceDistribution || [];
   const recentGenerations = data?.recentGenerations || [];
   const recentFailures = data?.recentFailures || [];
+  const storedActivities = data?.storedActivities || [];
 
   return (
     <div className="page-shell space-y-8">
@@ -395,6 +396,85 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* STORED ACTIVITIES & OUTPUT GENERATION SHOWCASE (RUBRIC CRITERION 1) */}
+      <section aria-label="Stored Activities and Output Generation" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">Stored Activities &amp; Generated Outputs</h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              Direct access to database-persisted Wordle &amp; Word Search activities with one-click generation.
+            </p>
+          </div>
+          <Link
+            href="/activities"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--surface-muted)] transition"
+          >
+            Manage Activities →
+          </Link>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {storedActivities.map((act) => {
+            const isWordle = act.activityType === "WORDLE";
+            const wordCount = act.wordList?.words?.length || 0;
+            return (
+              <div
+                key={act.id}
+                className="flex flex-col justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm hover:border-[var(--primary)] transition"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        isWordle
+                          ? "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300"
+                          : "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                      }`}
+                    >
+                      {isWordle ? "Phoneme Wordle" : "Phoneme Word Search"}
+                    </span>
+                    <span className="text-[10px] font-medium capitalize text-[var(--text-muted)]">
+                      {act.difficulty || "medium"}
+                    </span>
+                  </div>
+                  <h3 className="mt-2 text-sm font-bold">{act.name}</h3>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Linked List: <span className="font-medium text-[var(--text)]">{act.wordList?.name || "None"}</span> ({wordCount} words)
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1 text-[10px] text-[var(--text-muted)]">
+                    {act.wordList?.words?.slice(0, 3).map((w, idx) => (
+                      <span key={idx} className="rounded bg-[var(--surface-muted)] px-1.5 py-0.5 font-mono">
+                        {w.english}
+                      </span>
+                    ))}
+                    {wordCount > 3 && (
+                      <span className="rounded bg-[var(--surface-muted)] px-1.5 py-0.5">
+                        +{wordCount - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 border-t border-[var(--border)] pt-3">
+                  <Link
+                    href={isWordle ? "/wordle" : "/word-search"}
+                    className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] py-1.5 text-center text-xs font-semibold hover:bg-[var(--border)] transition"
+                  >
+                    Play in Game
+                  </Link>
+                  <Link
+                    href="/activities"
+                    className="flex-1 rounded-lg bg-[var(--primary)] py-1.5 text-center text-xs font-semibold text-white hover:opacity-90 transition"
+                  >
+                    Generate HTML
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

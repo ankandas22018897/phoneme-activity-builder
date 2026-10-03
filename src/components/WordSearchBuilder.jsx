@@ -72,15 +72,11 @@ function buildRandomPuzzle(rows, cols) {
 }
 
 function createStarterPuzzle() {
-  const result = buildRandomPuzzle(10, 10);
-  if (result.ok && result.puzzle) {
-    return { text: result.text, puzzle: result.puzzle };
-  }
-  const picked = pickRandomWordsForGrid(10, 10);
-  const fallback = buildFromText(picked.text, 10, 10);
+  const picked = pickRandomWordsForGrid(10, 10, { deterministic: true });
+  const result = buildWordSearchPuzzle(picked.words, 10, 10, { deterministic: true });
   return {
     text: picked.text,
-    puzzle: fallback.ok ? fallback.puzzle : null,
+    puzzle: result.ok ? result.puzzle : null,
   };
 }
 

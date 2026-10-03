@@ -15,6 +15,7 @@ export async function GET() {
       telemetrySessions,
       recentGenerations,
       emptyWordLists,
+      storedActivities,
     ] = await Promise.all([
       prisma.wordList.count(),
       prisma.activityConfiguration.count(),
@@ -48,6 +49,20 @@ export async function GET() {
       prisma.wordList.findMany({
         where: { words: { none: {} } },
         select: { id: true, name: true },
+      }),
+      prisma.activityConfiguration.findMany({
+        take: 6,
+        orderBy: { id: "desc" },
+        include: {
+          wordList: {
+            select: {
+              name: true,
+              words: {
+                select: { id: true, english: true, phonemes: true },
+              },
+            },
+          },
+        },
       }),
     ]);
 
@@ -134,6 +149,7 @@ export async function GET() {
       })),
       recentFailures,
       recentGenerations,
+      storedActivities,
       activeAlerts,
       systemHealth: {
         status: "UP",

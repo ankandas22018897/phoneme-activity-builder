@@ -45,6 +45,15 @@ export function generateWordSearchGrid(words, rows, cols, options = {}) {
   const failed = [];
   const pool = [];
 
+  let seed = 42;
+  const rnd = () => {
+    if (options.deterministic) {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    }
+    return Math.random();
+  };
+
   words.forEach((units) => {
     units.forEach((p) => {
       if (!pool.includes(p)) pool.push(p);
@@ -59,9 +68,9 @@ export function generateWordSearchGrid(words, rows, cols, options = {}) {
     let attempts = 0;
     while (!placed && attempts < maxAttempts) {
       attempts += 1;
-      const d = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
-      const r = Math.floor(Math.random() * rows);
-      const c = Math.floor(Math.random() * cols);
+      const d = DIRECTIONS[Math.floor(rnd() * DIRECTIONS.length)];
+      const r = Math.floor(rnd() * rows);
+      const c = Math.floor(rnd() * cols);
       if (canPlace(grid, units, r, c, d, rows, cols)) {
         const coords = [];
         for (let i = 0; i < units.length; i++) {
@@ -87,7 +96,7 @@ export function generateWordSearchGrid(words, rows, cols, options = {}) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (!grid[r][c]) {
-        grid[r][c] = pool[Math.floor(Math.random() * pool.length)];
+        grid[r][c] = pool[Math.floor(rnd() * pool.length)];
       }
     }
   }
@@ -183,7 +192,7 @@ export function wordCountForGrid(rows, cols) {
  * Pick a random phoneme word list that fits the grid dimensions.
  * Longer grids can include longer words; count scales with box size.
  */
-export function pickRandomWordsForGrid(rows, cols) {
+export function pickRandomWordsForGrid(rows, cols, options = {}) {
   const maxDim = Math.max(rows, cols);
   const count = wordCountForGrid(rows, cols);
   const eligible = PHONEME_WORDS.filter(
@@ -193,9 +202,18 @@ export function pickRandomWordsForGrid(rows, cols) {
       w.phonemes.length <= maxDim
   );
 
+  let seed = 12345;
+  const rnd = () => {
+    if (options.deterministic) {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    }
+    return Math.random();
+  };
+
   const shuffled = [...eligible];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rnd() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   const picked = [];
