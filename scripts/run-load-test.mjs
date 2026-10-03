@@ -20,12 +20,13 @@ const TIERS = [
 function makeRequest(endpoint) {
   return new Promise((resolve) => {
     const start = performance.now();
+    const startedAt = Date.now();
     const req = http.request(
       `${BASE_URL}${endpoint.path}`,
       { method: endpoint.method, timeout: 8000 },
       (res) => {
-        let body = '';
-        res.on('data', (chunk) => (body += chunk));
+        let bytes = 0;
+        res.on('data', (chunk) => (bytes += chunk.length));
         res.on('end', () => {
           const duration = performance.now() - start;
           resolve({
@@ -33,19 +34,26 @@ function makeRequest(endpoint) {
             status: res.statusCode,
             success: res.statusCode >= 200 && res.statusCode < 400,
             duration,
+            startedAt,
+            bytes,
           });
         });
       }
     );
 
+    req.on('timeout', () => req.destroy(Object.assign(new Error('Request timeout'), { code: 'ETIMEDOUT' })));
+
     req.on('error', (err) => {
       const duration = performance.now() - start;
+      const inner = err.errors?.[0];
       resolve({
         endpoint: endpoint.name,
         status: 0,
         success: false,
-        error: err.message,
+        error: err.code || inner?.code || err.message || 'UNKNOWN',
         duration,
+        startedAt,
+        bytes: 0,
       });
     });
 
@@ -58,6 +66,7 @@ async function runWorker(requestsQueue, results) {
     const endpoint = requestsQueue.pop();
     if (!endpoint) break;
     const result = await makeRequest(endpoint);
+    result.threads = requestsQueue.threads;
     results.push(result);
   }
 }
@@ -68,6 +77,7 @@ async function runTier(tier) {
   console.log(`========================================`);
 
   const queue = [];
+  queue.threads = tier.concurrency;
   for (let i = 0; i < tier.requests; i++) {
     queue.push(ENDPOINTS[i % ENDPOINTS.length]);
   }
@@ -110,6 +120,11 @@ async function runTier(tier) {
     p95Ms: Math.round(p95),
     p99Ms: Math.round(p99),
     maxMs: Math.round(latencies[latencies.length - 1]),
+    errorBreakdown: results.filter((r) => !r.success).reduce((acc, r) => {
+      const key = r.error || `HTTP ${r.status}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {}),
   };
 
   console.log(`Completed in ${summary.durationSeconds}s | Throughput: ${summary.throughputRps} req/s`);
@@ -140,8 +155,9 @@ async function main() {
   // Export JMeter JTL-compatible CSV
   const csvFile = path.join(outputDir, 'jmeter-results.csv');
   const csvHeader = 'timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect\n';
-  const csvRows = allResults.map((r, i) => {
-    return `${Date.now()},${Math.round(r.duration)},${r.endpoint},${r.status},${r.success ? 'OK' : 'Error'},Thread-Group 1-1,text,${r.success},${r.error || ''},512,128,1,1,http://localhost:3000,${Math.round(r.duration)},0,1`;
+  const csvRows = allResults.map((r) => {
+    const message = r.success ? 'OK' : (r.error || `HTTP ${r.status}`);
+    return `${r.startedAt},${Math.round(r.duration)},${r.endpoint},${r.status},${message},Tier-${r.threads},text,${r.success},${r.success ? '' : message},${r.bytes},0,${r.threads},${r.threads},${BASE_URL},${Math.round(r.duration)},0,0`;
   }).join('\n');
 
   fs.writeFileSync(csvFile, csvHeader + csvRows);

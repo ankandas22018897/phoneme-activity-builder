@@ -6,6 +6,7 @@ import { generateWordleHtml, generateWordSearchHtml } from "@/lib/htmlGenerator"
 import { buildWordSearchPuzzle } from "@/lib/wordSearchLogic";
 
 const emptyWord = { english: "", phonemes: "" };
+const now = () => performance.now();
 
 export default function ActivitiesPage() {
   const [lists, setLists] = useState([]);
@@ -35,7 +36,10 @@ export default function ActivitiesPage() {
     return { listsData, activitiesData };
   }
 
-  useEffect(() => { load().catch((e) => setError(e.message)); }, []);
+  useEffect(() => {
+    const initial = setTimeout(() => load().catch((e) => setError(e.message)), 0);
+    return () => clearTimeout(initial);
+  }, []);
 
   const wordCount = useMemo(() => words.filter((w) => w.english.trim() || w.phonemes.trim()).length, [words]);
 
@@ -144,11 +148,13 @@ export default function ActivitiesPage() {
 
   async function generateSaved(id) {
     setError("");
-    const startTime = performance.now();
+    const startTime = now();
+    let attemptedType = activities.find((a) => a.id === id)?.activityType || "WORD_SEARCH";
     try {
       const response = await fetch(`/api/activities/${id}`);
       const activity = await response.json();
       if (!response.ok) throw new Error(activity.error || "Could not load activity.");
+      attemptedType = activity.activityType;
       const targetWords = activity.wordList.words.map((w) => ({
         phonemes: Array.isArray(w.phonemes) ? w.phonemes : w.phonemes.split(/[- ]+/),
         english: w.english,
@@ -173,7 +179,7 @@ export default function ActivitiesPage() {
         html = generateWordSearchHtml({ ...built.puzzle, title: activity.outputTitle || activity.name });
       }
 
-      const durationMs = Math.round(performance.now() - startTime);
+      const durationMs = Math.round(now() - startTime);
 
       // Log successful generation to telemetry
       fetch("/api/telemetry", {
@@ -198,14 +204,14 @@ export default function ActivitiesPage() {
       URL.revokeObjectURL(url);
       setMessage(`Generated HTML from stored ${activity.activityType === "WORDLE" ? "Wordle" : "Word Search"} data in ${durationMs}ms.`);
     } catch (e) {
-      const durationMs = Math.round(performance.now() - startTime);
+      const durationMs = Math.round(now() - startTime);
       // Log failed generation to telemetry
       fetch("/api/telemetry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "generation",
-          activityType: "WORD_SEARCH",
+          activityType: attemptedType,
           activityId: id,
           status: "FAILED",
           durationMs,

@@ -16,6 +16,8 @@ export async function GET() {
       recentGenerations,
       emptyWordLists,
       storedActivities,
+      wordleGenerations,
+      wordSearchGenerations,
     ] = await Promise.all([
       prisma.wordList.count(),
       prisma.activityConfiguration.count(),
@@ -64,13 +66,18 @@ export async function GET() {
           },
         },
       }),
+      prisma.generationLog.count({ where: { activityType: "WORDLE" } }),
+      prisma.generationLog.count({ where: { activityType: "WORD_SEARCH" } }),
     ]);
 
-    // Calculate most-used activity type
+    // Most-used activity type: based on real usage (generation events),
+    // falling back to saved configuration counts when usage is tied.
+    const wordleScore = wordleGenerations * 1000 + wordleActivitiesCount;
+    const wordSearchScore = wordSearchGenerations * 1000 + wordSearchActivitiesCount;
     let mostUsedActivityType = "Equal";
-    if (wordleActivitiesCount > wordSearchActivitiesCount) {
+    if (wordleScore > wordSearchScore) {
       mostUsedActivityType = "Wordle";
-    } else if (wordSearchActivitiesCount > wordleActivitiesCount) {
+    } else if (wordSearchScore > wordleScore) {
       mostUsedActivityType = "Word Search";
     }
 
@@ -136,6 +143,9 @@ export async function GET() {
         wordleActivitiesCount,
         wordSearchActivitiesCount,
         mostUsedActivityType,
+        wordleGenerations,
+        wordSearchGenerations,
+        totalSessions: telemetrySessions.length,
         totalGenerations,
         successfulGenerations,
         failedGenerations,

@@ -39,10 +39,8 @@ export default function DashboardPage() {
       const dashJson = await dashRes.json();
       setData(dashJson);
 
-      if (healthRes.ok) {
-        const healthJson = await healthRes.json();
-        setHealthData(healthJson);
-      }
+      const healthJson = await healthRes.json().catch(() => ({}));
+      setHealthData({ ...healthJson, httpStatus: healthRes.status });
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -53,9 +51,12 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    const initial = setTimeout(fetchData, 0);
     const interval = setInterval(fetchData, 15000); // Poll every 15s
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(interval);
+    };
   }, [fetchData]);
 
   // Demo generator to show live reactivity in video
@@ -106,6 +107,8 @@ export default function DashboardPage() {
   const recentGenerations = data?.recentGenerations || [];
   const recentFailures = data?.recentFailures || [];
   const storedActivities = data?.storedActivities || [];
+  const healthOk = healthData?.httpStatus === 200;
+  const healthLabel = healthData ? `${healthData.httpStatus} ${healthOk ? "OK" : "DOWN"}` : "Checking…";
 
   return (
     <div className="page-shell space-y-8">
@@ -132,7 +135,7 @@ export default function DashboardPage() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-muted)] transition"
           >
             <Server className="h-3.5 w-3.5 text-blue-500" />
-            /health (200 OK)
+            /health ({healthLabel})
           </Link>
           <button
             onClick={fetchData}
@@ -196,13 +199,19 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">System Health</span>
-            <Server className="h-4 w-4 text-emerald-500" />
+            <Server className={`h-4 w-4 ${healthOk ? "text-emerald-500" : "text-red-500"}`} />
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-800 dark:text-emerald-300">200 OK</span>
+            <span
+              data-testid="health-status"
+              className={`text-2xl font-black ${healthOk ? "text-emerald-800 dark:text-emerald-300" : "text-red-800 dark:text-red-300"}`}
+            >
+              {healthLabel}
+            </span>
           </div>
           <p className="mt-2 text-xs text-[var(--text-muted)]">
-            DB: {healthData?.database?.status || "connected"} ({healthData?.database?.latencyMs || 2}ms)
+            DB: {healthData?.database?.status ?? "unknown"}
+            {healthData?.database?.latencyMs != null ? ` (${healthData.database.latencyMs}ms)` : ""}
           </p>
         </div>
 
@@ -229,11 +238,11 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-              {summary.mostUsedActivityType || "Word Search"}
+              {summary.mostUsedActivityType ?? "—"}
             </span>
           </div>
           <p className="mt-2 text-xs text-[var(--text-muted)]">
-            Based on saved configurations &amp; generations
+            {summary.wordleGenerations ?? 0} Wordle · {summary.wordSearchGenerations ?? 0} Word Search generations
           </p>
         </div>
 
@@ -244,7 +253,7 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-violet-500" />
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black">{summary.successRate || 100}%</span>
+            <span className="text-2xl font-black">{summary.successRate ?? "—"}%</span>
           </div>
           <p className="mt-2 text-xs text-[var(--text-muted)]">
             {summary.successfulGenerations || 0} success · {summary.failedGenerations || 0} failed
@@ -263,7 +272,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <p className="mt-2 text-xs text-[var(--text-muted)]">
-            Across 600+ tracked user sessions
+            Across {summary.totalSessions ?? 0} tracked user sessions
           </p>
         </div>
       </section>
@@ -575,8 +584,14 @@ export default function DashboardPage() {
               Live server-side monitoring payload fulfilling Assessment 3 healthcheck requirement.
             </p>
           </div>
-          <span className="rounded bg-emerald-100 px-2 py-1 font-mono text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-            HTTP 200 OK
+          <span
+            className={`rounded px-2 py-1 font-mono text-xs font-bold ${
+              healthOk
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+            }`}
+          >
+            HTTP {healthLabel}
           </span>
         </div>
         <pre className="mt-4 overflow-x-auto rounded-xl bg-slate-950 p-4 font-mono text-xs text-emerald-400">

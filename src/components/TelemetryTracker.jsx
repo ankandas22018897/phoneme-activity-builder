@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 export default function TelemetryTracker() {
   const pathname = usePathname();
-  const startTimeRef = useRef(Date.now());
+  const startTimeRef = useRef(0);
 
   useEffect(() => {
     startTimeRef.current = Date.now();

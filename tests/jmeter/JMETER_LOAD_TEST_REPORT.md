@@ -17,26 +17,26 @@ Testing targeted three critical system workflows:
 
 | Load Tier | Target Profile | Concurrency | Total Requests | Throughput (RPS) | Error Rate (%) | Min (ms) | Avg (ms) | P90 (ms) | P99 (ms) | Max (ms) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **Tier 1 (x1)** | Baseline Single User | 1 | 20 | 60.4 req/s | **0.00%** | 3 ms | 16 ms | 35 ms | 123 ms | 123 ms |
-| **Tier 2 (x10)** | Concurrent Classroom | 10 | 100 | 306.5 req/s | **0.00%** | 6 ms | 28 ms | 65 ms | 99 ms | 99 ms |
-| **Tier 3 (x100)** | Peak School Usage | 100 | 500 | 434.2 req/s | **0.00%** | 13 ms | 209 ms | 282 ms | 359 ms | 458 ms |
-| **Tier 4 (x1,000)** | Multi-School Stress | 500 | 2,000 | 946.3 req/s | 45.45% | 27 ms | 427 ms | 1,152 ms | 1,632 ms | 1,810 ms |
-| **Tier 5 (x10,000)** | Extreme Breakpoint | 1,000 | 5,000 | 1,465.9 req/s | 65.04% | 184 ms | 555 ms | 1,102 ms | 2,614 ms | 2,985 ms |
+| **Tier 1 (x1)** | Baseline Single User | 1 | 20 | 45.5 req/s | **0.00%** | 2 ms | 22 ms | 74 ms | 91 ms | 91 ms |
+| **Tier 2 (x10)** | Concurrent Classroom | 10 | 100 | 272.3 req/s | **0.00%** | 3 ms | 33 ms | 57 ms | 73 ms | 73 ms |
+| **Tier 3 (x100)** | Peak School Usage | 100 | 500 | 401.1 req/s | **0.00%** | 18 ms | 226 ms | 296 ms | 384 ms | 428 ms |
+| **Tier 4 (x1,000)** | Multi-School Stress | 500 | 2,000 | 1,043.6 req/s | 60.35% | 20 ms | 366 ms | 1,183 ms | 1,582 ms | 1,714 ms |
+| **Tier 5 (x10,000)** | Extreme Breakpoint | 1,000 | 5,000 | 1,320.0 req/s | 67.74% | 154 ms | 603 ms | 1,239 ms | 2,887 ms | 3,282 ms |
 
 ---
 
 ### 3. Detailed Architectural Behavior Analysis Under Varying Loads
 
 #### 3.1 Tier 1 (x1) & Tier 2 (x10) — Optimal Operating State
-* **System Behavior**: Latency remains exceptionally low (mean 16ms – 28ms) with 0% error rate.
+* **System Behavior**: Latency remains exceptionally low (mean 22ms – 33ms) with 0% error rate.
 * **Analysis**: Node.js event loop effortlessly schedules and resolves concurrent asynchronous database queries with Prisma. The connection pool handles 10 concurrent requests without queueing delays.
 
 #### 3.2 Tier 3 (x100) — High Concurrency Classroom Peak
-* **System Behavior**: Average latency increases to 209ms; 99th percentile response time is 359ms. The error rate remains **0.00%**, and throughput reaches 434.2 requests/sec.
+* **System Behavior**: Average latency is 226ms; 99th percentile response time is 384ms. The error rate remains **0.00%**, and throughput reaches 401.1 requests/sec.
 * **Analysis**: While CPU utilization rises to ~45%, Next.js Turbopack-optimized server architecture continues to deliver sub-second responses. SQLite's WAL (Write-Ahead Logging) mode allows simultaneous read operations across all concurrent queries.
 
 #### 3.3 Tier 4 (x1,000) & Tier 5 (x10,000) — System Saturation & Breakpoint
-* **System Behavior**: Throughput peaks at 1,465.9 req/s before socket exhaustion and thread queue timeouts emerge. Error rates rise to 45.45% and 65.04% due to `ECONNRESET` and HTTP 503 throttling.
+* **System Behavior**: Throughput peaks at 1,320.0 req/s before socket exhaustion and thread queue timeouts emerge. Error rates rise to 60.35% and 67.74% due to `ECONNREFUSED` socket backlog exhaustion under extreme concurrency.
 * **Root Cause & Scalability Trade-Offs**:
   1. **Single-Process Limitation**: A single Node.js instance runs on a single main event loop thread. Under 1,000–10,000 virtual users, socket backlog queues fill faster than the OS can accept incoming TCP connections.
   2. **Database Concurrency**: While SQLite handles moderate reads well, extreme concurrency produces lock contention on complex aggregations.
