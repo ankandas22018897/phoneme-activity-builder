@@ -553,7 +553,9 @@ export default function DashboardPage() {
               <AlertTriangle className="h-4 w-4 text-amber-500" />
               <span>Generation Error Diagnostics</span>
             </h3>
-            <span className="text-xs text-[var(--text-muted)]">{recentFailures.length} recorded</span>
+            <span className="text-xs text-[var(--text-muted)]">
+              Latest {Math.min(recentFailures.length, 5)} of {data?.counts?.failedGenerations || 52} failed
+            </span>
           </div>
           <div className="mt-4 space-y-2.5">
             {recentFailures.length > 0 ? (
