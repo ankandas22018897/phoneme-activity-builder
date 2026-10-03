@@ -16,13 +16,52 @@ function prismaData(value) {
   return data;
 }
 
+function parsePhonemes(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (!raw) return [];
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return trimmed.split(/[- ,|/]+/).filter(Boolean);
+  }
+  return [];
+}
+
 export async function GET(_request, { params }) {
   try {
     const id = idFrom(await params);
     if (!id) return NextResponse.json({ error: "Invalid activity ID." }, { status: 400 });
-    const activity = await prisma.activityConfiguration.findUnique({ where: { id }, include: { wordList: { include: { words: true } } } });
+    const activity = await prisma.activityConfiguration.findUnique({
+      where: { id },
+      include: {
+        wordList: {
+          include: {
+            words: {
+              include: { phonemeItems: { orderBy: { position: "asc" } } },
+              orderBy: { id: "asc" },
+            },
+          },
+        },
+      },
+    });
     if (!activity) return NextResponse.json({ error: "Activity not found." }, { status: 404 });
-    return NextResponse.json({ ...serialize(activity), wordList: { ...activity.wordList, words: activity.wordList.words.map((w) => ({ ...w, phonemes: JSON.parse(w.phonemes) })) } });
+    return NextResponse.json({
+      ...serialize(activity),
+      wordList: {
+        ...activity.wordList,
+        words: activity.wordList.words.map((w) => ({
+          ...w,
+          phonemes: w.phonemeItems && w.phonemeItems.length > 0
+            ? w.phonemeItems.map((p) => p.symbol)
+            : parsePhonemes(w.phonemes),
+        })),
+      },
+    });
   } catch (error) {
     console.error("GET activity failed:", error);
     return NextResponse.json({ error: "Could not retrieve the activity." }, { status: 500 });

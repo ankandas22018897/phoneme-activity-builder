@@ -7,13 +7,46 @@ function idFrom(params) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+function parsePhonemes(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (!raw) return [];
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return trimmed.split(/[- ,|/]+/).filter(Boolean);
+  }
+  return [];
+}
+
 export async function GET(_request, { params }) {
   try {
     const id = idFrom(await params);
     if (!id) return NextResponse.json({ error: "Invalid word list ID." }, { status: 400 });
-    const list = await prisma.wordList.findUnique({ where: { id }, include: { words: { orderBy: { id: "asc" } }, activities: true } });
+    const list = await prisma.wordList.findUnique({
+      where: { id },
+      include: {
+        words: {
+          include: { phonemeItems: { orderBy: { position: "asc" } } },
+          orderBy: { id: "asc" },
+        },
+        activities: true,
+      },
+    });
     if (!list) return NextResponse.json({ error: "Word list not found." }, { status: 404 });
-    return NextResponse.json({ ...list, words: list.words.map((w) => ({ ...w, phonemes: JSON.parse(w.phonemes) })) });
+    return NextResponse.json({
+      ...list,
+      words: list.words.map((w) => ({
+        ...w,
+        phonemes: w.phonemeItems && w.phonemeItems.length > 0
+          ? w.phonemeItems.map((p) => p.symbol)
+          : parsePhonemes(w.phonemes),
+      })),
+    });
   } catch (error) {
     console.error("GET word list failed:", error);
     return NextResponse.json({ error: "Could not retrieve the word list." }, { status: 500 });
