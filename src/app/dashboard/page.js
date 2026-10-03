@@ -16,7 +16,8 @@ import {
   Smartphone,
   Monitor,
   Tablet,
-  Play
+  Play,
+  ExternalLink
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -129,13 +130,22 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/health"
-            target="_blank"
+          <a
+            href="#server-health-inspector"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-muted)] transition"
           >
             <Server className="h-3.5 w-3.5 text-blue-500" />
-            /health ({healthLabel})
+            System Health ({healthLabel})
+          </a>
+          <Link
+            href="/health"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open raw REST API endpoint"
+            className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-muted)] transition"
+          >
+            <span>Raw JSON</span>
+            <ExternalLink className="h-3 w-3" />
           </Link>
           <button
             onClick={fetchData}
@@ -573,26 +583,40 @@ export default function DashboardPage() {
       </section>
 
       {/* HEALTHCHECK INSPECTOR ACCORDION */}
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
-        <div className="flex items-center justify-between">
+      <section
+        id="server-health-inspector"
+        className="scroll-mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm transition"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="font-bold text-base flex items-center gap-2">
               <Database className="h-4 w-4 text-emerald-500" />
-              Server Health Endpoint Response (<code>/health</code>)
+              Server Health Endpoint Response (<code className="text-xs bg-[var(--surface-muted)] px-1.5 py-0.5 rounded">/health</code>)
             </h3>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">
               Live server-side monitoring payload fulfilling Assessment 3 healthcheck requirement.
             </p>
           </div>
-          <span
-            className={`rounded px-2 py-1 font-mono text-xs font-bold ${
-              healthOk
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-            }`}
-          >
-            HTTP {healthLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/health"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-medium text-[var(--text)] hover:border-[var(--primary)] transition"
+            >
+              <span>View Raw API</span>
+              <ExternalLink className="h-3 w-3 text-[var(--text-muted)]" />
+            </Link>
+            <span
+              className={`rounded px-2.5 py-1 font-mono text-xs font-bold ${
+                healthOk
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                  : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+              }`}
+            >
+              HTTP {healthLabel}
+            </span>
+          </div>
         </div>
         <pre className="mt-4 overflow-x-auto rounded-xl bg-slate-950 p-4 font-mono text-xs text-emerald-400">
           {JSON.stringify(healthData, null, 2)}
