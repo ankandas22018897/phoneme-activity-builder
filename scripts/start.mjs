@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 
 try {
-  execFileSync("npx", ["prisma", "db", "push", "--skip-generate"], { stdio: "inherit", env: process.env });
+  execFileSync("npx", ["prisma", "db", "push", "--skip-generate"], { stdio: "inherit", env: process.env, shell: true });
 } catch (error) {
   console.error("Database initialisation failed.");
   process.exit(error.status || 1);
