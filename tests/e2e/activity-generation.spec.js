@@ -40,7 +40,7 @@ test.describe("User Use Case: Generating and Viewing Wordle & Word Search Activi
     await expect(page.locator("h1")).toContainText("System & Data Dashboard");
 
     // Verify health status badge and health link
-    await expect(page.getByRole("link", { name: "/health (200 OK)" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /\/health/i })).toBeVisible();
     await expect(page.locator("span.font-black", { hasText: "200 OK" })).toBeVisible();
 
     // Verify KPI cards

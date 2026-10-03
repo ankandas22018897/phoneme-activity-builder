@@ -130,23 +130,20 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <a
-            href="#server-health-inspector"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-muted)] transition"
-          >
-            <Server className="h-3.5 w-3.5 text-blue-500" />
-            System Health ({healthLabel})
-          </a>
           <Link
             href="/health"
             target="_blank"
-            rel="noopener noreferrer"
-            title="Open raw REST API endpoint"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-muted)] transition"
+          >
+            <Server className="h-3.5 w-3.5 text-blue-500" />
+            /health ({healthLabel})
+          </Link>
+          <a
+            href="#server-health-inspector"
             className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-muted)] transition"
           >
-            <span>Raw JSON</span>
-            <ExternalLink className="h-3 w-3" />
-          </Link>
+            <span>Inspect Payload ↓</span>
+          </a>
           <button
             onClick={fetchData}
             disabled={refreshing}
